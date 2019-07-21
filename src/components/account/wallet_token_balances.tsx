@@ -4,8 +4,14 @@ import { connect } from 'react-redux';
 import styled from 'styled-components';
 
 import { startToggleTokenLockSteps } from '../../store/actions';
-import { getEthBalance, getTokenBalances, getWeb3State, getWethTokenBalance } from '../../store/selectors';
-import { tokenAmountInUnits } from '../../util/tokens';
+import {
+    getEthAccount,
+    getEthBalance,
+    getTokenBalances,
+    getWeb3State,
+    getWethTokenBalance,
+} from '../../store/selectors';
+import { getEtherscanLinkForToken, getEtherscanLinkForTokenAndAddress, tokenAmountInUnits } from '../../util/tokens';
 import { StoreState, Token, TokenBalance, Web3State } from '../../util/types';
 import { Card } from '../common/card';
 import { TokenIcon } from '../common/icons/token_icon';
@@ -17,6 +23,7 @@ interface StateProps {
     tokenBalances: TokenBalance[];
     web3State: Web3State;
     wethTokenBalance: TokenBalance | null;
+    ethAccount: string;
 }
 
 interface DispatchProps {
@@ -44,6 +51,29 @@ const TokenIconStyled = styled(TokenIcon)`
 
 const CustomTDTokenName = styled(CustomTD)`
     white-space: nowrap;
+`;
+
+const TokenEtherscanLink = styled.a`
+    align-items: center;
+    color: ${props => props.theme.componentsTheme.myWalletLinkColor};
+    display: flex;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+`;
+
+const QuantityEtherscanLink = styled.a`
+    align-items: center;
+    color: ${props => props.theme.componentsTheme.myWalletLinkColor};
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
 `;
 
 const CustomTDLockIcon = styled(CustomTD)`
@@ -122,7 +152,14 @@ const LockCell = ({ isUnlocked, onClick }: LockCellProps) => {
 
 class WalletTokenBalances extends React.PureComponent<Props> {
     public render = () => {
-        const { ethBalance, tokenBalances, onStartToggleTokenLockSteps, web3State, wethTokenBalance } = this.props;
+        const {
+            ethBalance,
+            tokenBalances,
+            onStartToggleTokenLockSteps,
+            web3State,
+            wethTokenBalance,
+            ethAccount,
+        } = this.props;
 
         if (!wethTokenBalance) {
             return null;
@@ -130,13 +167,17 @@ class WalletTokenBalances extends React.PureComponent<Props> {
 
         const wethToken = wethTokenBalance.token;
         const totalEth = wethTokenBalance.balance.plus(ethBalance);
-        const formattedTotalEthBalance = tokenAmountInUnits(totalEth, wethToken.decimals);
+        const formattedTotalEthBalance = tokenAmountInUnits(totalEth, wethToken.decimals, wethToken.displayDecimals);
         const onTotalEthClick = () => onStartToggleTokenLockSteps(wethTokenBalance.token, wethTokenBalance.isUnlocked);
 
         const totalEthRow = (
             <TR>
                 <TokenTD>
-                    <TokenIconStyled symbol={wethToken.symbol} primaryColor={wethToken.primaryColor} />
+                    <TokenIconStyled
+                        symbol={wethToken.symbol}
+                        primaryColor={wethToken.primaryColor}
+                        icon={wethToken.icon}
+                    />
                 </TokenTD>
                 <CustomTDTokenName styles={{ borderBottom: true }}>
                     <TokenName>ETH Total</TokenName> {` (ETH + wETH)`}
@@ -157,18 +198,27 @@ class WalletTokenBalances extends React.PureComponent<Props> {
         const tokensRows = tokenBalances.map((tokenBalance, index) => {
             const { token, balance, isUnlocked } = tokenBalance;
             const { symbol } = token;
-            const formattedBalance = tokenAmountInUnits(balance, token.decimals);
+            const formattedBalance = tokenAmountInUnits(balance, token.decimals, token.displayDecimals);
             const onClick = () => onStartToggleTokenLockSteps(token, isUnlocked);
 
             return (
                 <TR key={symbol}>
                     <TokenTD>
-                        <TokenIconStyled symbol={token.symbol} primaryColor={token.primaryColor} />
+                        <TokenIconStyled symbol={token.symbol} primaryColor={token.primaryColor} icon={token.icon} />
                     </TokenTD>
                     <CustomTDTokenName styles={{ borderBottom: true }}>
-                        <TokenName>{token.symbol.toUpperCase()}</TokenName> {`- ${token.name}`}
+                        <TokenEtherscanLink href={getEtherscanLinkForToken(token)} target={'_blank'}>
+                            <TokenName>{token.symbol.toUpperCase()}</TokenName> {` - ${token.name}`}
+                        </TokenEtherscanLink>
                     </CustomTDTokenName>
-                    <CustomTD styles={{ borderBottom: true, textAlign: 'right' }}>{formattedBalance}</CustomTD>
+                    <CustomTD styles={{ borderBottom: true, textAlign: 'right' }}>
+                        <QuantityEtherscanLink
+                            href={getEtherscanLinkForTokenAndAddress(token, ethAccount)}
+                            target={'_blank'}
+                        >
+                            {formattedBalance}
+                        </QuantityEtherscanLink>
+                    </CustomTD>
                     <CustomTD styles={{ borderBottom: true, textAlign: 'right' }}>-</CustomTD>
                     <CustomTD styles={{ borderBottom: true, textAlign: 'right' }}>-</CustomTD>
                     <LockCell
@@ -214,6 +264,7 @@ const mapStateToProps = (state: StoreState): StateProps => {
         tokenBalances: getTokenBalances(state),
         web3State: getWeb3State(state),
         wethTokenBalance: getWethTokenBalance(state),
+        ethAccount: getEthAccount(state),
     };
 };
 const mapDispatchToProps = {

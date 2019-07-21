@@ -17,11 +17,14 @@ export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 export const FEE_RECIPIENT = process.env.REACT_APP_FEE_RECIPIENT || ZERO_ADDRESS;
 
 export const ETH_DECIMALS = 18;
+export const MAX_AMOUNT_TOKENS_IN_UNITS = 100000000000000000000000000000000000;
 
 export const UI_DECIMALS_DISPLAYED_ON_STEP_MODALS = 3;
 export const UI_DECIMALS_DISPLAYED_SPREAD_PERCENT = 2;
+export const UI_DECIMALS_DISPLAYED_DEFAULT_PRECISION = 2;
 export const UI_DECIMALS_DISPLAYED_ORDER_SIZE = 0;
 export const UI_DECIMALS_DISPLAYED_PRICE_ETH = 7;
+export const UI_GENERAL_TITLE = 'Launch Kit';
 
 export const METAMASK_EXTENSION_URL = 'https://metamask.io/';
 export const METAMASK_CHROME_EXTENSION_DOWNLOAD_URL =
@@ -75,6 +78,4 @@ export const NETWORK_ID: number = Number.parseInt(process.env.REACT_APP_NETWORK_
 
 export const NETWORK_NAME: string = Network[NETWORK_ID];
 
-export const FILLS_LIMIT: number =
-    Number.parseInt(process.env.REACT_APP_FILLS_LIMIT as string, 10) || 50;
-
+export const FILLS_LIMIT: number = Number.parseInt(process.env.REACT_APP_FILLS_LIMIT as string, 10) || 50;

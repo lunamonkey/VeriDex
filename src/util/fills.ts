@@ -1,10 +1,9 @@
-import { assetDataUtils, ExchangeFillEventArgs, LogWithDecodedArgs, BigNumber } from '0x.js';
+import { assetDataUtils, BigNumber, ExchangeFillEventArgs, LogWithDecodedArgs } from '0x.js';
 
 import { KnownTokens } from './known_tokens';
 import { getOrderSideFromFillEvent } from './notifications';
 import { getTransactionLink } from './transaction_link';
 import { Fill, Market, OrderSide, Token } from './types';
-
 
 export const buildFill = (
     log: LogWithDecodedArgs<ExchangeFillEventArgs>,
@@ -17,25 +16,20 @@ export const buildFill = (
     let quoteTokenAddress: string;
     let baseToken: Token;
     let quoteToken: Token;
-  /*  quoteTokenAddress = OrderSide.Sell
-        ? assetDataUtils.decodeERC20AssetData(args.makerAssetData).tokenAddress
-        : assetDataUtils.decodeERC20AssetData(args.takerAssetData).tokenAddress;
 
-    baseTokenAddress = OrderSide.Sell
-        ? assetDataUtils.decodeERC20AssetData(args.takerAssetData).tokenAddress
-        : assetDataUtils.decodeERC20AssetData(args.makerAssetData).tokenAddress;*/
+    quoteTokenAddress =
+        side === OrderSide.Buy
+            ? assetDataUtils.decodeERC20AssetData(args.takerAssetData).tokenAddress
+            : assetDataUtils.decodeERC20AssetData(args.makerAssetData).tokenAddress;
 
-    quoteTokenAddress = side === OrderSide.Buy
-        ? assetDataUtils.decodeERC20AssetData(args.takerAssetData).tokenAddress
-        : assetDataUtils.decodeERC20AssetData(args.makerAssetData).tokenAddress;
-
-    baseTokenAddress = side === OrderSide.Buy
-        ? assetDataUtils.decodeERC20AssetData(args.makerAssetData).tokenAddress
-        : assetDataUtils.decodeERC20AssetData(args.takerAssetData).tokenAddress;
-
+    baseTokenAddress =
+        side === OrderSide.Buy
+            ? assetDataUtils.decodeERC20AssetData(args.makerAssetData).tokenAddress
+            : assetDataUtils.decodeERC20AssetData(args.takerAssetData).tokenAddress;
 
     baseToken = knownTokens.getTokenByAddress(baseTokenAddress);
     quoteToken = knownTokens.getTokenByAddress(quoteTokenAddress);
+
     const amountQuote = side === OrderSide.Buy ? args.takerAssetFilledAmount : args.makerAssetFilledAmount;
     const amountBase = side === OrderSide.Buy ? args.makerAssetFilledAmount : args.takerAssetFilledAmount;
 

@@ -4,7 +4,7 @@ import * as Factory from 'factory.ts';
 
 import { TokenMetaData } from '../common/tokens_meta_data';
 
-import { Collectible, OrderSide, Token, TokenBalance, UIOrder } from './types';
+import { Collectible, CurrencyPair, OrderSide, Token, TokenBalance, UIOrder } from './types';
 
 export const makeOrder = ({
     makerAssetAmount,
@@ -50,6 +50,18 @@ export const uiOrder = (params = {}): UIOrder => {
     };
 };
 
+export const getCurrencyPairFromTokens = (base: Token, quote: Token): CurrencyPair => ({
+    base: base.symbol.toLowerCase(),
+    quote: quote.symbol.toLowerCase(),
+    config: {
+        basePrecision: 4,
+        pricePrecision: 4,
+        quotePrecision: 4,
+        minAmount: 0,
+        maxAmount: 1000000,
+    },
+});
+
 export const openOrder = (params = {}): UIOrder => {
     return uiOrder({
         status: OrderStatus.Fillable,
@@ -79,10 +91,12 @@ export const addressFactory = Factory.Sync.makeFactory<{ address: string }>({
 export const tokenFactory = Factory.Sync.makeFactory<Token>({
     address: Factory.each(() => addressFactory.build().address),
     decimals: 0,
+    displayDecimals: 2,
     name: Factory.each(i => `Mock Token ${i}`),
     primaryColor: '#ff0000',
     // @ts-ignore
     symbol: Factory.each(i => `MOCK${i}`),
+    icon: undefined,
 });
 
 export const tokenMetaDataFactory = Factory.Sync.makeFactory<TokenMetaData>({
@@ -94,6 +108,7 @@ export const tokenMetaDataFactory = Factory.Sync.makeFactory<TokenMetaData>({
     primaryColor: '#ff0000',
     // @ts-ignore
     symbol: Factory.each(i => `MOCK${i}`),
+    icon: '',
 });
 
 export const tokenBalanceFactory = Factory.Sync.makeFactory<TokenBalance>({

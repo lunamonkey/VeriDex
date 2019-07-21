@@ -3,12 +3,12 @@ import { SignedOrder } from '@0x/connect';
 
 import { getKnownTokens } from '../../util/known_tokens';
 import { makeOrder, uiOrder } from '../../util/test-utils';
-import { OrderSide, TokenSymbol, UIOrder } from '../../util/types';
+import { OrderSide, UIOrder } from '../../util/types';
 import { mergeByPrice, ordersToUIOrders } from '../../util/ui_orders';
 
 describe('ordersToUIOrders', () => {
-    const ZrxToken = getKnownTokens().getTokenBySymbol(TokenSymbol.Zrx);
-    const WethToken = getKnownTokens().getTokenBySymbol(TokenSymbol.Weth);
+    const ZrxToken = getKnownTokens().getTokenBySymbol('zrx');
+    const WethToken = getKnownTokens().getTokenBySymbol('weth');
 
     it('should convert a sell Order to a UIOrder', async () => {
         // given
@@ -273,6 +273,38 @@ describe('mergeByPrice', () => {
                 side: OrderSide.Sell,
                 size: new BigNumber('4.00'),
                 price: new BigNumber('1.01'),
+            },
+        ]);
+    });
+    it('should group orders by precision', async () => {
+        // given
+        const orders = [
+            {
+                side: OrderSide.Sell,
+                price: new BigNumber('1.00'),
+                size: new BigNumber('5.00'),
+            },
+            {
+                side: OrderSide.Sell,
+                price: new BigNumber('1.00'),
+                size: new BigNumber('3.00'),
+            },
+            {
+                side: OrderSide.Sell,
+                price: new BigNumber('1.01'),
+                size: new BigNumber('4.00'),
+            },
+        ].map(uiOrder);
+
+        // when
+        const result = mergeByPrice(orders, 0);
+
+        // then
+        expect(result).toEqual([
+            {
+                side: OrderSide.Sell,
+                size: new BigNumber('12.00'),
+                price: new BigNumber('1.00'),
             },
         ]);
     });

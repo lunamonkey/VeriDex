@@ -4,19 +4,18 @@ import { createAction, createAsyncAction } from 'typesafe-actions';
 
 import { COLLECTIBLE_ADDRESS, FEE_RECIPIENT, NETWORK_ID, START_BLOCK_LIMIT } from '../../common/constants';
 import { ConvertBalanceMustNotBeEqualException } from '../../exceptions/convert_balance_must_not_be_equal_exception';
-
 import { SignedOrderException } from '../../exceptions/signed_order_exception';
 import { subscribeToFillEvents, subscribeToFillEventsByFeeRecipient } from '../../services/exchange';
 import { getGasEstimationInfoAsync } from '../../services/gas_price_estimation';
 import { LocalStorage } from '../../services/local_storage';
-import { getTokenBalance, tokenToTokenBalance } from '../../services/tokens';
+import { tokensToTokenBalances, tokenToTokenBalance } from '../../services/tokens';
 import { isMetamaskInstalled } from '../../services/web3_wrapper';
 import { buildFill } from '../../util/fills';
 import { getKnownTokens, isWeth } from '../../util/known_tokens';
 import { getLogger } from '../../util/logger';
 import { buildOrderFilledNotification } from '../../util/notifications';
 import { buildDutchAuctionCollectibleOrder, buildSellCollectibleOrder } from '../../util/orders';
-import { getBlockNumberFromTransactionHash, getTransactionOptions } from '../../util/transactions';
+import { getTransactionOptions } from '../../util/transactions';
 import {
     BlockchainState,
     Collectible,
@@ -29,7 +28,7 @@ import {
     Web3State,
 } from '../../util/types';
 import { getAllCollectibles } from '../collectibles/actions';
-import { fetchMarkets, setMarketTokens, updateMarketPriceEther } from '../market/actions';
+import { fetchMarkets, setMarketTokens, updateMarketPriceEther, updateMarketPriceQuote } from '../market/actions';
 import { getOrderBook, getOrderbookAndUserOrders, initializeRelayerData } from '../relayer/actions';
 import {
     getCurrencyPair,
@@ -184,20 +183,19 @@ export const updateTokenBalances: ThunkCreator<Promise<any>> = (txHash?: string)
         const state = getState();
         const ethAccount = getEthAccount(state);
         const knownTokens = getKnownTokens();
+        const wethToken = knownTokens.getWethToken();
 
-        const tokenBalances = await Promise.all(
-            knownTokens.getTokens().map(token => tokenToTokenBalance(token, ethAccount)),
-        );
-        // tslint:disable-next-line:no-floating-promises
+        const allTokenBalances = await tokensToTokenBalances([...knownTokens.getTokens(), wethToken], ethAccount);
+        const wethBalance = allTokenBalances.find(b => b.token.symbol === wethToken.symbol);
+        const tokenBalances = allTokenBalances.filter(b => b.token.symbol !== wethToken.symbol);
         dispatch(setTokenBalances(tokenBalances));
 
         const web3Wrapper = await getWeb3Wrapper();
-        const blockNumber = await getBlockNumberFromTransactionHash(txHash);
-        const ethBalance = await web3Wrapper.getBalanceInWeiAsync(ethAccount, blockNumber);
-        const wethToken = knownTokens.getWethToken();
-        const wethBalance = await getTokenBalance(wethToken, ethAccount);
+        const ethBalance = await web3Wrapper.getBalanceInWeiAsync(ethAccount);
+        if (wethBalance) {
+            dispatch(setWethBalance(wethBalance.balance));
+        }
         dispatch(setEthBalance(ethBalance));
-        dispatch(setWethBalance(wethBalance));
         return ethBalance;
     };
 };
@@ -290,8 +288,10 @@ export const setConnectedDexFills: ThunkCreator<Promise<any>> = (ethAccount: str
     return async (dispatch, getState, { getContractWrappers, getWeb3Wrapper }) => {
         const knownTokens = getKnownTokens();
         const localStorage = new LocalStorage(window.localStorage);
-
-        dispatch(setFills(localStorage.getFills(ethAccount)));
+        const storageFills = localStorage.getFills(ethAccount).filter(f => {
+            return knownTokens.isKnownAddress(f.tokenBase.address) && knownTokens.isKnownAddress(f.tokenQuote.address);
+        });
+        dispatch(setFills(storageFills));
 
         const state = getState();
         const web3Wrapper = await getWeb3Wrapper();
@@ -301,8 +301,8 @@ export const setConnectedDexFills: ThunkCreator<Promise<any>> = (ethAccount: str
 
         const lastBlockChecked = localStorage.getLastBlockChecked(ethAccount);
 
-        const fromBlock =lastBlockChecked !== null ? lastBlockChecked + 1 : Math.max(blockNumber - START_BLOCK_LIMIT, 1);
-       
+        const fromBlock =
+            lastBlockChecked !== null ? lastBlockChecked + 1 : Math.max(blockNumber - START_BLOCK_LIMIT, 1);
 
         const toBlock = blockNumber;
 
@@ -329,7 +329,6 @@ export const setConnectedDexFills: ThunkCreator<Promise<any>> = (ethAccount: str
                 );
             },
             pastFillEventsCallback: async fillEvents => {
-
                 const validFillEvents = fillEvents.filter(knownTokens.isValidFillEvent);
                 const fills = await Promise.all(
                     validFillEvents.map(async fillEvent => {
@@ -357,9 +356,6 @@ export const setConnectedDexFills: ThunkCreator<Promise<any>> = (ethAccount: str
         localStorage.saveLastBlockChecked(blockNumber, ethAccount);
     };
 };
-
-
-
 
 export const initWallet: ThunkCreator<Promise<any>> = () => {
     return async (dispatch, getState) => {
@@ -439,10 +435,8 @@ const initWalletERC20: ThunkCreator<Promise<any>> = () => {
             const state = getState();
             const knownTokens = getKnownTokens();
             const ethAccount = getEthAccount(state);
+            const tokenBalances = await tokensToTokenBalances(knownTokens.getTokens(), ethAccount);
 
-            const tokenBalances = await Promise.all(
-                knownTokens.getTokens().map(token => tokenToTokenBalance(token, ethAccount)),
-            );
             const currencyPair = getCurrencyPair(state);
             const baseToken = knownTokens.getTokenBySymbol(currencyPair.base);
             const quoteToken = knownTokens.getTokenBySymbol(currencyPair.quote);
@@ -464,6 +458,8 @@ const initWalletERC20: ThunkCreator<Promise<any>> = () => {
                 // Relayer error
                 logger.error('The fetch markets from the relayer failed', error);
             }
+            // tslint:disable-next-line:no-floating-promises
+            dispatch(updateMarketPriceQuote());
         }
     };
 };
@@ -606,6 +602,8 @@ export const initializeAppNoMetamaskOrLocked: ThunkCreator = () => {
 
             // tslint:disable-next-line:no-floating-promises
             await dispatch(fetchMarkets());
+            // tslint:disable-next-line: no-floating-promises
+            dispatch(updateMarketPriceQuote());
         } else {
             // tslint:disable-next-line:no-floating-promises
             dispatch(getAllCollectibles());

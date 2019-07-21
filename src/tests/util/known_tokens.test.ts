@@ -1,26 +1,33 @@
 import { NETWORK_ID } from '../../common/constants';
 import { KNOWN_TOKENS_META_DATA, TokenMetaData } from '../../common/tokens_meta_data';
 import { getKnownTokens, isERC20AssetData, KnownTokens } from '../../util/known_tokens';
-import { Token, TokenSymbol } from '../../util/types';
+import { Token } from '../../util/types';
 
 const dummyTokensMetaData: TokenMetaData[] = [
     {
         decimals: 18,
-        symbol: TokenSymbol.Weth,
+        symbol: 'weth',
         name: 'Wrapped Ether',
+        id: 'ethereum',
         addresses: {
             [NETWORK_ID]: '0x0b1ba0af832d7c05fd64161e0db78e85978e8082',
         },
         primaryColor: '#ccc',
+        displayDecimals: 2,
+        precision: 8,
+        minAmount: 0,
     },
     {
         decimals: 18,
-        symbol: TokenSymbol.Zrx,
+        symbol: 'zrx',
         name: '0x',
         addresses: {
             [NETWORK_ID]: '0x871dd7c2b4b25e1aa18728e9d5f2af4c4e431f5c',
         },
         primaryColor: '#ccc',
+        displayDecimals: 2,
+        precision: 2,
+        id: '0x',
     },
 ];
 const wethToken: Token = {
@@ -29,6 +36,12 @@ const wethToken: Token = {
     decimals: dummyTokensMetaData[0].decimals,
     name: dummyTokensMetaData[0].name,
     primaryColor: '#ccc',
+    displayDecimals: 2,
+    icon: undefined,
+    minAmount: 0,
+    maxAmount: undefined,
+    precision: 8,
+    id: 'ethereum',
 };
 const zrxToken: Token = {
     address: dummyTokensMetaData[1].addresses[NETWORK_ID],
@@ -36,6 +49,12 @@ const zrxToken: Token = {
     decimals: dummyTokensMetaData[1].decimals,
     name: dummyTokensMetaData[1].name,
     primaryColor: '#ccc',
+    displayDecimals: 2,
+    icon: undefined,
+    id: '0x',
+    maxAmount: undefined,
+    minAmount: 0,
+    precision: 2,
 };
 
 const fillEvent1 = {
@@ -190,7 +209,7 @@ describe('KnownTokens', () => {
     describe('getTokenBySymbol', () => {
         it('should return Token when the corresponding TokenMetada was present on init', () => {
             const knownTokens = new KnownTokens(dummyTokensMetaData);
-            expect(knownTokens.getTokenBySymbol(TokenSymbol.Zrx)).toEqual(zrxToken);
+            expect(knownTokens.getTokenBySymbol('zrx')).toEqual(zrxToken);
         });
 
         it('should throw the TokenMetada specified by the given symbol was not present on init', () => {

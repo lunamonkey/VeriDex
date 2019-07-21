@@ -6,18 +6,22 @@ import { BigNumber } from '0x.js';
 import React from 'react';
 
 import { WalletTokenBalances } from '../../../components/account';
-import { TokenBalance, TokenSymbol, Web3State } from '../../../util/types';
+import { TokenBalance, Web3State } from '../../../util/types';
 import { mountWithTheme, renderWithTheme } from '../../util/test_with_theme';
 
 const noop = () => ({});
 const ZERO = new BigNumber(0);
+const tokenDefaults = {
+    displayDecimals: 2,
+    primaryColor: 'white',
+    decimals: 18,
+};
 const wethTokenBalance = {
     balance: ZERO,
     token: {
-        primaryColor: 'white',
+        ...tokenDefaults,
         address: '0x100',
-        decimals: 18,
-        symbol: 'WETH' as TokenSymbol,
+        symbol: 'WETH',
         name: 'wETH',
     },
     isUnlocked: true,
@@ -25,14 +29,14 @@ const wethTokenBalance = {
 
 describe('WalletTokenBalances', () => {
     it('should show one row for each token plus one for the total eth', () => {
+        const account = '0x1';
         const tokenBalances: TokenBalance[] = [
             {
                 balance: new BigNumber(1),
                 token: {
-                    primaryColor: 'white',
+                    ...tokenDefaults,
                     address: '0x1',
-                    decimals: 18,
-                    symbol: 'MOCK1' as TokenSymbol,
+                    symbol: 'MOCK1',
                     name: 'MOCK1',
                 },
                 isUnlocked: true,
@@ -40,10 +44,9 @@ describe('WalletTokenBalances', () => {
             {
                 balance: new BigNumber(1),
                 token: {
-                    primaryColor: 'white',
+                    ...tokenDefaults,
                     address: '0x2',
-                    decimals: 18,
-                    symbol: 'MOCK2' as TokenSymbol,
+                    symbol: 'MOCK2',
                     name: 'MOCK2',
                 },
                 isUnlocked: true,
@@ -51,10 +54,9 @@ describe('WalletTokenBalances', () => {
             {
                 balance: new BigNumber(1),
                 token: {
-                    primaryColor: 'white',
+                    ...tokenDefaults,
                     address: '0x3',
-                    decimals: 18,
-                    symbol: 'MOCK3' as TokenSymbol,
+                    symbol: 'MOCK3',
                     name: 'MOCK3',
                 },
                 isUnlocked: true,
@@ -69,6 +71,7 @@ describe('WalletTokenBalances', () => {
                 tokenBalances={tokenBalances}
                 onStartToggleTokenLockSteps={noop}
                 web3State={Web3State.Done}
+                ethAccount={account}
             />,
         );
 
@@ -77,14 +80,14 @@ describe('WalletTokenBalances', () => {
     });
 
     it('should properly show locked and unlocked tokens', () => {
+        const account = '0x1';
         const tokenBalances: TokenBalance[] = [
             {
                 balance: new BigNumber(1),
                 token: {
-                    primaryColor: 'white',
+                    ...tokenDefaults,
                     address: '0x1',
-                    decimals: 18,
-                    symbol: 'MOCK1' as TokenSymbol,
+                    symbol: 'MOCK1',
                     name: 'MOCK1',
                 },
                 isUnlocked: true,
@@ -92,10 +95,9 @@ describe('WalletTokenBalances', () => {
             {
                 balance: new BigNumber(1),
                 token: {
-                    primaryColor: 'white',
+                    ...tokenDefaults,
                     address: '0x2',
-                    decimals: 18,
-                    symbol: 'MOCK2' as TokenSymbol,
+                    symbol: 'MOCK2',
                     name: 'MOCK2',
                 },
                 isUnlocked: false,
@@ -103,10 +105,9 @@ describe('WalletTokenBalances', () => {
             {
                 balance: new BigNumber(1),
                 token: {
-                    primaryColor: 'white',
+                    ...tokenDefaults,
                     address: '0x3',
-                    decimals: 18,
-                    symbol: 'MOCK3' as TokenSymbol,
+                    symbol: 'MOCK3',
                     name: 'MOCK3',
                 },
                 isUnlocked: true,
@@ -120,6 +121,7 @@ describe('WalletTokenBalances', () => {
                 tokenBalances={tokenBalances}
                 onStartToggleTokenLockSteps={noop}
                 web3State={Web3State.Done}
+                ethAccount={account}
             />,
         );
 
@@ -128,14 +130,15 @@ describe('WalletTokenBalances', () => {
     });
 
     it('should call the onToggleTokenLock function when a locked token is clicked', () => {
+        const account = '0x1';
+
         const tokenBalances: TokenBalance[] = [
             {
                 balance: new BigNumber(1),
                 token: {
-                    primaryColor: 'white',
+                    ...tokenDefaults,
                     address: '0x1',
-                    decimals: 18,
-                    symbol: 'MOCK1' as TokenSymbol,
+                    symbol: 'MOCK1',
                     name: 'MOCK1',
                 },
                 isUnlocked: true,
@@ -143,10 +146,9 @@ describe('WalletTokenBalances', () => {
             {
                 balance: new BigNumber(1),
                 token: {
-                    primaryColor: 'white',
+                    ...tokenDefaults,
                     address: '0x2',
-                    decimals: 18,
-                    symbol: 'MOCK2' as TokenSymbol,
+                    symbol: 'MOCK2',
                     name: 'MOCK2',
                 },
                 isUnlocked: false,
@@ -154,10 +156,9 @@ describe('WalletTokenBalances', () => {
             {
                 balance: new BigNumber(1),
                 token: {
-                    primaryColor: 'white',
+                    ...tokenDefaults,
                     address: '0x3',
-                    decimals: 18,
-                    symbol: 'MOCK3' as TokenSymbol,
+                    symbol: 'MOCK3',
                     name: 'MOCK3',
                 },
                 isUnlocked: true,
@@ -173,6 +174,7 @@ describe('WalletTokenBalances', () => {
                 tokenBalances={tokenBalances}
                 onStartToggleTokenLockSteps={onToggleTokenLock}
                 web3State={Web3State.Done}
+                ethAccount={account}
             />,
         );
 
@@ -187,14 +189,14 @@ describe('WalletTokenBalances', () => {
     });
 
     it('should call the onToggleTokenLock function when a unlocked token is clicked', () => {
+        const account = '0x1';
         const tokenBalances: TokenBalance[] = [
             {
                 balance: new BigNumber(1),
                 token: {
-                    primaryColor: 'white',
+                    ...tokenDefaults,
                     address: '0x1',
-                    decimals: 18,
-                    symbol: 'MOCK1' as TokenSymbol,
+                    symbol: 'MOCK1',
                     name: 'MOCK1',
                 },
                 isUnlocked: true,
@@ -202,10 +204,9 @@ describe('WalletTokenBalances', () => {
             {
                 balance: new BigNumber(1),
                 token: {
-                    primaryColor: 'white',
+                    ...tokenDefaults,
                     address: '0x2',
-                    decimals: 18,
-                    symbol: 'MOCK2' as TokenSymbol,
+                    symbol: 'MOCK2',
                     name: 'MOCK2',
                 },
                 isUnlocked: false,
@@ -213,10 +214,9 @@ describe('WalletTokenBalances', () => {
             {
                 balance: new BigNumber(1),
                 token: {
-                    primaryColor: 'white',
+                    ...tokenDefaults,
                     address: '0x3',
-                    decimals: 18,
-                    symbol: 'MOCK3' as TokenSymbol,
+                    symbol: 'MOCK3',
                     name: 'MOCK3',
                 },
                 isUnlocked: true,
@@ -232,6 +232,7 @@ describe('WalletTokenBalances', () => {
                 tokenBalances={tokenBalances}
                 onStartToggleTokenLockSteps={onToggleTokenLock}
                 web3State={Web3State.Done}
+                ethAccount={account}
             />,
         );
         const rows = wrapper.find('tbody tr');

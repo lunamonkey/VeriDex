@@ -66,8 +66,7 @@ export const subscribeToFillEventsByFeeRecipient = ({
             fillEventCallback(logEvent.log);
         },
     );
-        console.log(fromBlock);
-        console.log(toBlock);
+
     exchange
         .getLogsAsync<ExchangeFillEventArgs>(
             ExchangeEvents.Fill,
@@ -76,7 +75,7 @@ export const subscribeToFillEventsByFeeRecipient = ({
                 toBlock,
             },
             {
-               feeRecipientAddress: ethAccount,
+                feeRecipientAddress: ethAccount,
             },
         )
         .then(pastFillEventsCallback);

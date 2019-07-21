@@ -1,15 +1,18 @@
 import queryString from 'query-string';
 import { getType } from 'typesafe-actions';
 
-import { MarketState, TokenSymbol } from '../../util/types';
+import { availableMarkets } from '../../common/markets';
+import { getCurrencyPairByTokensSymbol } from '../../util/known_currency_pairs';
+import { MarketState } from '../../util/types';
 import * as actions from '../actions';
 import { RootAction } from '../reducers';
+const base = (queryString.parse(queryString.extract(window.location.hash)).base as string) || availableMarkets[0].base;
+const quote =
+    (queryString.parse(queryString.extract(window.location.hash)).quote as string) || availableMarkets[0].quote;
+const currencyPair = getCurrencyPairByTokensSymbol(base, quote);
 
 const initialMarketState: MarketState = {
-    currencyPair: {
-        base: (queryString.parse(queryString.extract(window.location.hash)).base as TokenSymbol) || TokenSymbol.Vsf,
-        quote: (queryString.parse(queryString.extract(window.location.hash)).quote as TokenSymbol) || TokenSymbol.Weth,
-    },
+    currencyPair,
     baseToken: null,
     quoteToken: null,
     markets: null,
@@ -30,6 +33,12 @@ export function market(state: MarketState = initialMarketState, action: RootActi
             return state;
         case getType(actions.fetchMarketPriceEtherError):
             return state;
+        case getType(actions.fetchMarketPriceQuoteUpdate):
+            return { ...state, quoteInUsd: action.payload };
+        case getType(actions.fetchMarketPriceQuoteStart):
+            return { ...state, quoteInUsd: null };
+        case getType(actions.fetchMarketPriceQuoteError):
+            return { ...state, quoteInUsd: null };
         default:
             return state;
     }

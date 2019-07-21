@@ -38,6 +38,7 @@ export const getBaseToken = (state: StoreState) => state.market.baseToken;
 export const getQuoteToken = (state: StoreState) => state.market.quoteToken;
 export const getMarkets = (state: StoreState) => state.market.markets;
 export const getEthInUsd = (state: StoreState) => state.market.ethInUsd;
+export const getQuoteInUsd = (state: StoreState) => state.market.quoteInUsd;
 export const getGasPriceInWei = (state: StoreState) => state.blockchain.gasInfo.gasPriceInWei;
 export const getEstimatedTxTimeMs = (state: StoreState) => state.blockchain.gasInfo.estimatedTimeMs;
 export const getAllCollectibles = (state: StoreState) => state.collectibles.allCollectibles;
@@ -168,10 +169,11 @@ export const getOrderBook = createSelector(
     getOpenSellOrders,
     getOpenBuyOrders,
     getMySizeOrders,
-    (sellOrders, buyOrders, mySizeOrders): OrderBook => {
+    getCurrencyPair,
+    (sellOrders, buyOrders, mySizeOrders, currencyPair): OrderBook => {
         const orderBook = {
-            sellOrders: mergeByPrice(sellOrders),
-            buyOrders: mergeByPrice(buyOrders),
+            sellOrders: mergeByPrice(sellOrders, currencyPair.config.pricePrecision),
+            buyOrders: mergeByPrice(buyOrders, currencyPair.config.pricePrecision),
             mySizeOrders,
         };
         return orderBook;

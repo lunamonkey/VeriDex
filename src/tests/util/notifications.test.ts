@@ -7,37 +7,47 @@ import {
     getTransactionHashFromNotification,
 } from '../../util/notifications';
 import { addressFactory } from '../../util/test-utils';
-import { Notification, OrderSide, TokenSymbol } from '../../util/types';
+import { Notification, OrderSide } from '../../util/types';
 
 describe('buildOrderFilledNotification', () => {
     const knownTokens = getKnownTokens();
-    const zrxToken = knownTokens.getTokenBySymbol(TokenSymbol.Zrx);
+    const zrxToken = knownTokens.getTokenBySymbol('zrx');
     const wethToken = knownTokens.getWethToken();
 
     // ZRX/WETH
     const baseTokenAssetData = assetDataUtils.encodeERC20AssetData(zrxToken.address);
     const quoteTokenAssetData = assetDataUtils.encodeERC20AssetData(wethToken.address);
+    const config = {
+        basePrecision: 8,
+        pricePrecision: 8,
+        quotePrecision: 8,
+        minAmount: 0,
+        maxAmount: 1000000,
+    };
 
     const markets = [
         {
             price: null,
             currencyPair: {
-                base: TokenSymbol.Zrx,
-                quote: TokenSymbol.Weth,
+                base: 'zrx',
+                quote: 'weth',
+                config,
             },
         },
         {
             price: null,
             currencyPair: {
-                base: TokenSymbol.Mkr,
-                quote: TokenSymbol.Weth,
+                base: 'mkr',
+                quote: 'weth',
+                config,
             },
         },
         {
             price: null,
             currencyPair: {
-                base: TokenSymbol.Zrx,
-                quote: TokenSymbol.Mkr,
+                base: 'zrx',
+                quote: 'mkr',
+                config,
             },
         },
     ];
@@ -134,6 +144,7 @@ describe('getTransactionHashFromNotification and getTransactionHashFromNotificat
                 },
                 side: 0,
                 timestamp: new Date('2019-04-17T19:15:17.580Z'),
+                tx: Promise.resolve({}),
             },
             expectedUrl: 'https://etherscan.io/tx/0x5be9d8c576805c1c05a42af30f4c42eb087aa72e5a28d2dc2ead0fc8b30ee63a',
             expectedTxHash: '0x5be9d8c576805c1c05a42af30f4c42eb087aa72e5a28d2dc2ead0fc8b30ee63a',
@@ -189,6 +200,7 @@ describe('getTransactionHashFromNotification and getTransactionHashFromNotificat
                 },
                 side: 1,
                 timestamp: new Date('2019-04-16T19:10:28.876Z'),
+                tx: Promise.resolve({}),
             },
             expectedUrl: 'https://etherscan.io/tx/0xb0f540b4d996d05c84fc7acac3c339e85e7aa2f1e62e789facd2ae5fdabea813',
             expectedTxHash: '0xb0f540b4d996d05c84fc7acac3c339e85e7aa2f1e62e789facd2ae5fdabea813',

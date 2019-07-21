@@ -4,7 +4,9 @@ import { RouterState } from 'connected-react-router';
 import { ActionCreator, AnyAction } from 'redux';
 import { ThunkAction } from 'redux-thunk';
 
+import { TokenMetaData } from '../common/tokens_meta_data';
 import { ExtraArgument } from '../store/index';
+import { ThemeModalStyle, ThemeProperties } from '../themes/commons';
 
 export interface TabItem {
     active: boolean;
@@ -14,6 +16,7 @@ export interface TabItem {
 
 export enum Network {
     Mainnet = 1,
+    Ropsten = 3,
     Rinkeby = 4,
     Kovan = 42,
     Ganache = 50,
@@ -23,8 +26,17 @@ export interface Token {
     address: string;
     decimals: number;
     name: string;
-    symbol: TokenSymbol;
+    symbol: string;
     primaryColor: string;
+    id?: string;
+    icon?: string;
+    displayDecimals: number;
+    minAmount?: number;
+    maxAmount?: number;
+    precision?: number;
+    website?: string;
+    description?: string;
+    verisafe_sticker?: string;
 }
 
 export interface TokenBalance {
@@ -75,6 +87,7 @@ export interface MarketState {
     readonly baseToken: Token | null;
     readonly quoteToken: Token | null;
     readonly ethInUsd: BigNumber | null;
+    readonly quoteInUsd?: BigNumber | null;
     readonly markets: Market[] | null;
 }
 
@@ -194,8 +207,26 @@ export interface OrderBook {
 }
 
 export interface CurrencyPair {
-    base: TokenSymbol;
-    quote: TokenSymbol;
+    base: string;
+    quote: string;
+    config: {
+        basePrecision: number;
+        pricePrecision: number;
+        minAmount: number;
+        maxAmount: number;
+        quotePrecision: number;
+    };
+}
+export interface CurrencyPairMetaData {
+    base: string;
+    quote: string;
+    config?: {
+        basePrecision?: number;
+        pricePrecision?: number;
+        minAmount?: number;
+        maxAmount?: number;
+        quotePrecision?: number;
+    };
 }
 
 export interface Market {
@@ -259,23 +290,6 @@ export interface OrderFilledNotification extends BaseNotification {
 }
 
 export type Notification = CancelOrderNotification | MarketNotification | LimitNotification | OrderFilledNotification;
-
-export enum TokenSymbol {
-    Weth = 'weth',
-    Zrx = 'zrx',
-    Dai = 'dai',
-    Mkr = 'mkr',
-    Rep = 'rep',
-    Dgd = 'dgd',
-    Mln = 'mln',
-    Vsf = 'vsf',
-    Kubo = 'kubo',
-    Ftm = 'ftm',
-    Bomb = 'bomb',
-    Ethplo = 'ethplo',
-    Sntvt = 'sntvt',
-    Nuke = 'nuke',
-}
 
 export enum OrderType {
     Limit = 'Limit',
@@ -345,4 +359,27 @@ export enum ButtonVariant {
 
 export enum ButtonIcons {
     Warning = 'warning',
+}
+
+export interface Filter {
+    text: string;
+    value: null | string;
+}
+
+export interface PartialTheme {
+    componentsTheme?: Partial<ThemeProperties>;
+    modalTheme?: Partial<ThemeModalStyle>;
+}
+
+export interface GeneralConfig {
+    title?: string;
+    icon?: string;
+}
+
+export interface ConfigFile {
+    tokens: TokenMetaData[];
+    pairs: CurrencyPairMetaData[];
+    marketFilters?: Filter[];
+    theme?: PartialTheme;
+    general?: GeneralConfig;
 }
